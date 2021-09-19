@@ -5,7 +5,7 @@ import time
 
 import gym
 
-from Diskonnect1D.envs import DiskonnectPlayerEnv
+from Games.envs import DiskonnectPlayerEnv
 from Diskonnect1DEnv import Diskonnect1D
 
 import wandb

@@ -3,4 +3,4 @@
 from gym.envs.registration import register
 
 register(id='DiskonnectPlayerEnv-v0',
-         entry_point='Diskonnect1D.envs:DiskonnectPlayerEnv')
+         entry_point='Games.envs:DiskonnectPlayerEnv')
