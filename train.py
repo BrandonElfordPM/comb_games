@@ -6,7 +6,6 @@ import time
 import gym
 
 from Games.envs import DiskonnectPlayerEnv
-from Diskonnect1DEnv import Diskonnect1D
 
 import wandb
 #from wandb.integration.sb3 import WandbCallback
@@ -26,6 +25,7 @@ def main():
     env = DummyVecEnv([lambda: env])
     #env = VecCheckNan(env, raise_exception=True)
     
+    device = "cuda"
     
     policy = 'MlpPolicy'
     policy_fcn = [int(board_len*2), int(board_len*2)]
@@ -40,7 +40,7 @@ def main():
                 policy_kwargs     = policy_kwargs,
                 verbose           = 0,
                 seed              = SEED,
-                device            = 'cpu')
+                device            = device)
     
     timesteps = 1e6
 
