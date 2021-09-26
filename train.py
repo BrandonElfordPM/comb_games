@@ -24,9 +24,8 @@ def main():
 
     env = gym.make("DiskonnectPlayerEnv-v0", player_piece=-1, length=board_len, board=None)
     env = DummyVecEnv([lambda: env])
-    env = VecCheckNan(env, raise_exception=True)
+    #env = VecCheckNan(env, raise_exception=True)
     
-    device = 'cpu'
     
     policy = 'MlpPolicy'
     policy_fcn = [int(board_len*2), int(board_len*2)]
@@ -37,12 +36,11 @@ def main():
 
     model = PPO(policy            = policy,
                 env               = env,
-                batch_size        = 128,
-                tensorboard_log   = None,
+                batch_size        = 32,
                 policy_kwargs     = policy_kwargs,
                 verbose           = 0,
                 seed              = SEED,
-                device            = device)
+                device            = 'cpu')
     
     timesteps = 1e6
 
