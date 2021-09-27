@@ -3,6 +3,8 @@ sys.path.append( os.path.dirname(os.path.dirname((os.path.realpath(__file__)))) 
 
 import time
 
+import numpy as np
+
 import gym
 
 from Games.envs import DiskonnectPlayerEnv
@@ -18,12 +20,14 @@ SEED=20200530
 
 
 def main():
-    board_len = 30
-    board = None
+    board = np.array([-1, 1, 0])
+    board_len = len(board)
 
-    env = gym.make("DiskonnectPlayerEnv-v0", player_piece=-1, length=board_len, board=None)
-    env = DummyVecEnv([lambda: env])
-    #env = VecCheckNan(env, raise_exception=True)
+    env_left = gym.make("DiskonnectPlayerEnv-v0", player_piece=-1, length=board_len, board=board)
+    env_left = DummyVecEnv([lambda: env_left])
+
+    env_right = gym.make("DiskonnectPlayerEnv-v0", player_piece=1, length=board_len, board=board)
+    env_right = DummyVecEnv([lambda: env_right])
     
     device = "cuda"
     
@@ -35,18 +39,19 @@ def main():
                                            vf=value_fcn  ) ] )
 
     model = PPO(policy            = policy,
-                env               = env,
+                env               = env_left,
                 batch_size        = 32,
                 policy_kwargs     = policy_kwargs,
                 verbose           = 0,
                 seed              = SEED,
                 device            = device)
     
-    timesteps = 1e6
+    timesteps = 1e4
 
     model.learn(total_timesteps     = timesteps,
                 tb_log_name         = 'ppo',
                 reset_num_timesteps = False)
+
 
 if __name__=="__main__":
     main()
