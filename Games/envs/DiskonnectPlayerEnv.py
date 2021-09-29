@@ -9,11 +9,6 @@ from gym import spaces
 
 import wandb
 
-wandb.init(name         = "first_training",
-           project      = '1D-Diskonnect',
-           monitor_gym  = True,
-           reinit       = True)
-
 
 ###########
 
@@ -35,6 +30,7 @@ class DiskonnectPlayerEnv(gym.Env):
         
         self.global_step = 0
 
+        self.orig_board = None
         if type(board) == type(None):
             self.board = Diskonnect1D(length=self.len)
         else:
@@ -55,7 +51,8 @@ class DiskonnectPlayerEnv(gym.Env):
         info = {'states':  self.board.board,
                 'reward':  reward,
                 'move_0':  move[0],
-                'move_1':  move[1]
+                'move_1':  move[1],
+                'global_step': self.global_step
                 }
                 
         self.__log__(info, commit=True)
@@ -68,7 +65,9 @@ class DiskonnectPlayerEnv(gym.Env):
 
     def reset(self):
         self.curr_step = 0
-        self.board = Diskonnect1D(board=deepcopy(self.orig_board))
+        if self.orig_board is not None:
+            self.board = Diskonnect1D(board=deepcopy(self.orig_board))
+        self.board.reset()
         return self.board.board
     
 
