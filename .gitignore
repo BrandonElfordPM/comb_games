@@ -1,7 +1,8 @@
 *.ipynb_checkpoints/*
 .vscode/*
 *.ipynb
-*__pycache__/*
+*/__pycache__/*
 wandb/*
 *.egg*
 *.pyc
+*.cpython*.pyc

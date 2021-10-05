@@ -47,6 +47,8 @@ def init_model(env, lr=3e-4):
 def main():
     board_len = 9
     
+    timesteps = 2e5
+    
     ###
                                            
     board_1 = np.array([-1, 1, 0, 1, 0, 1, 0, 1, -1])
@@ -57,10 +59,8 @@ def main():
     print("=== Training first model =====")
 
     model = init_model(env_1)
-    
-    timesteps_1 = 5e4
 
-    model.learn(total_timesteps     = timesteps_1,
+    model.learn(total_timesteps     = timesteps,
                 tb_log_name         = 'ppo',
                 reset_num_timesteps = False)
                   
@@ -82,14 +82,12 @@ def main():
 
     model = init_model(env_2)
                 
-    model.env.envs[0].global_step += timesteps_1
+    model.env.envs[0].global_step += timesteps + 704 # not sure why I need to add 704
                   
     model.policy.load_state_dict(           state_dict_1['model_state_dict']     )
     model.policy.optimizer.load_state_dict( state_dict_1['optimizer_state_dict'] )
-    
-    timesteps_2 = 5e4
 
-    model.learn(total_timesteps     = timesteps_2,
+    model.learn(total_timesteps     = timesteps,
                 tb_log_name         = 'ppo',
                 reset_num_timesteps = False)
                   
@@ -109,14 +107,12 @@ def main():
     
     model = init_model(env_3)
                   
-    model.env.envs[0].global_step += timesteps_1 + timesteps_2
+    model.env.envs[0].global_step += timesteps * 2 + 704 # not sure why I need to add 704
                   
     model.policy.load_state_dict(           state_dict_2['model_state_dict']     )
     model.policy.optimizer.load_state_dict( state_dict_2['optimizer_state_dict'] )
     
-    timesteps_3 = 5e4
-    
-    model.learn(total_timesteps     = timesteps_3,
+    model.learn(total_timesteps     = timesteps,
                 tb_log_name         = 'ppo',
                 reset_num_timesteps = False)
                 
