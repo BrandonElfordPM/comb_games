@@ -15,7 +15,7 @@ import wandb
 
 class DiskonnectPlayerEnv(gym.Env):
     
-    def __init__(self, player_piece, length=None, board=None):
+    def __init__(self, player_piece, length=None, board=None, logging=False):
         if length == None:
             try:
                 length = len(board)
@@ -36,6 +36,8 @@ class DiskonnectPlayerEnv(gym.Env):
         else:
             self.orig_board = deepcopy(board)
 
+        self.log=logging
+
         self.reset()
         
         
@@ -55,7 +57,8 @@ class DiskonnectPlayerEnv(gym.Env):
                 'global_step': self.global_step
                 }
                 
-        self.__log__(info, commit=True)
+        if self.log:
+            self.__log__(info, commit=True)
 
         self.curr_step += 1
         self.global_step += 1
@@ -102,23 +105,29 @@ class Diskonnect1D():
         self._gen_legal_moves_()
     
     def _generate_board_(self):
-        # fix the number of players to be in [2?, length-10?]
-        num_pieces = int(max((self.len-5)/2, 2))
-        
-        # always an equal number of players
-        self.board = np.zeros(self.len)
-        self.open_positions = set(range(self.len))
-        
-        # player positions
-        self.player1_positions = rand.sample(self.open_positions, num_pieces)
-        for piece in self.player1_positions:
-            self.open_positions.remove(piece)
-            self.board[piece] = 1
+        while True:
+            # fix the number of players to be in [2?, length-10?]
+            num_pieces = int(max((self.len-5)/2, 2))
             
-        self.player2_positions = rand.sample(self.open_positions, num_pieces)
-        for piece in self.player2_positions:
-            self.open_positions.remove(piece)
-            self.board[piece] = -1
+            # always an equal number of players
+            self.board = np.zeros(self.len)
+            self.open_positions = set(range(self.len))
+            
+            # player positions
+            self.player1_positions = rand.sample(self.open_positions, num_pieces)
+            for piece in self.player1_positions:
+                self.open_positions.remove(piece)
+                self.board[piece] = 1
+                
+            self.player2_positions = rand.sample(self.open_positions, num_pieces)
+            for piece in self.player2_positions:
+                self.open_positions.remove(piece)
+                self.board[piece] = -1
+
+            self._gen_legal_moves_()
+            if not self._is_done_():
+                break
+
             
     def _update_board_(self, player, move):
         is_legal_move = self._check_legal_move_(player, move)
@@ -127,6 +136,7 @@ class Diskonnect1D():
             self.board[int(sum(move)/2)] = 0
             self.board[move[1]]          = player
             self._gen_legal_moves_()
+
         return is_legal_move
                     
     def _check_legal_move_(self, player, move):
