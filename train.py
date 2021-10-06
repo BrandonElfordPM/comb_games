@@ -51,7 +51,7 @@ def train_level(player_piece, board_len, board, logging, timesteps, level_num=0,
     model = init_model(env)
     # if continuing training, need to configure wandb to continue logging
     if level_num > 0:
-        model.env.envs[0].global_step += ( timesteps + 704 ) * level_num  # not sure why I need to add 704
+        model.env.envs[0].global_step += int( ( timesteps + 720 ) * level_num)  # not sure why I need to add 720
     # if continuing, load in state dict
     if state_dict is not None:
         model.policy.load_state_dict(           state_dict['model_state_dict']     )
@@ -84,7 +84,7 @@ def main():
     ###
     state_dict = train_level(-1, 
                              board_len,
-                             np.array([-1, 1, 0, 1, 0, 1, 0, 1, 0]),
+                             np.array([0, 1, 0, 1, -1, 1, 0, 1, 0]),
                              logging,
                              timesteps,
                              level_num=level_num
@@ -93,7 +93,7 @@ def main():
     level_num+=1
     state_dict = train_level(-1, 
                              board_len,
-                             np.array([0, 1, -1, 1, 0, 1, 0, 1, 0]),
+                             np.array([0, 1, -1, 1, 0, 1, -1, 1, 0]),
                              logging,
                              timesteps,
                              level_num=level_num,
@@ -103,17 +103,7 @@ def main():
     level_num+=1
     state_dict = train_level(-1, 
                              board_len,
-                             np.array([0, 1, 0, 1, -1, 1, 0, 1, 0]),
-                             logging,
-                             timesteps*2,
-                             level_num=level_num,
-                             state_dict=state_dict
-                             )
-    ### 
-    level_num+=1
-    state_dict = train_level(-1, 
-                             board_len,
-                             np.array([0, 1, 0, 1, 0, 1, -1, 1, 0]),
+                             np.array([-1, 1, 0, 1, 0, 1, 0, 1, -1]),
                              logging,
                              timesteps,
                              level_num=level_num,
@@ -123,7 +113,17 @@ def main():
     level_num+=1
     state_dict = train_level(-1, 
                              board_len,
-                             np.array([0, 1, 0, 1, 0, 1, 0, 1, -1]),
+                             np.array([0, 1, -1, 1, -1, 1, -1, 1, 0]),
+                             logging,
+                             timesteps,
+                             level_num=level_num,
+                             state_dict=state_dict
+                             )
+    ### 
+    level_num+=1
+    state_dict = train_level(-1, 
+                             board_len,
+                             np.array([-1, 1, -1, 1, -1, 1, -1, 1, 0]),
                              logging,
                              timesteps,
                              level_num=level_num,

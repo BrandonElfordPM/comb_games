@@ -47,21 +47,26 @@ class DiskonnectPlayerEnv(gym.Env):
         move = (piece_to_move, piece_to_move-2 if direction == 0 else piece_to_move+2)
         
         reward = self.board._update_board_(self.player, move)
+        reward -= 0.1 # time cost, want to finish the game as soon as possible
+        
+        self.episode_reward += reward
+        
         done = self.board._is_done_()
         obs = self.board.board
-        
-        info = {'states':  self.board.board,
-                'reward':  reward,
-                'move_0':  move[0],
-                'move_1':  move[1],
-                'global_step': self.global_step
-                }
-                
-        if self.log:
-            self.__log__(info, commit=True)
 
         self.curr_step += 1
         self.global_step += 1
+        
+        if self.log:
+            info = {'states':  self.board.board,
+                    'reward':  reward,
+                    'move_0':  move[0],
+                    'move_1':  move[1],
+                    'global_step': self.global_step
+                    }
+            if done:
+                info.update({'episode_reward': self.episode_reward})
+            self.__log__(info, commit=True)
         
         return obs, reward, done, {}
     
@@ -71,6 +76,7 @@ class DiskonnectPlayerEnv(gym.Env):
         if self.orig_board is not None:
             self.board = Diskonnect1D(board=deepcopy(self.orig_board))
         self.board.reset()
+        self.episode_reward = 0
         return self.board.board
     
 
@@ -143,7 +149,7 @@ class Diskonnect1D():
         if move in self.legal_moves[player]:
             return 1
         else:
-            return -1
+            return 0
     
     def _gen_legal_moves_(self):
         self.legal_moves = {-1:[],1:[]}
