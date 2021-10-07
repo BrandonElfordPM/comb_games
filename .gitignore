@@ -1,8 +1,11 @@
-*.ipynb_checkpoints/*
 .vscode/*
-*.ipynb
-*/__pycache__/*
-wandb/*
-*.egg*
+**wandb/
+
 *.pyc
-*.cpython*.pyc
+*/*/*/__pycache__/
+*/*/__pycache__/
+*/__pycache__/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
