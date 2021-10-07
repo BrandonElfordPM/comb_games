@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import random as rand
 from copy import deepcopy
 
@@ -50,12 +51,15 @@ class DiskonnectPlayerEnv(gym.Env):
         self.episode_reward += reward
         
         done = self.board._is_done_()
+        done = ( self.board.legal_moves[self.player] == [] )
         obs = self.board.board
 
         self.curr_step += 1
         self.global_step += 1
-        
+
         if self.log:
+            wandb_board = { str(i): self.board.board[i] for i in range(self.len) }
+            self.__log__(wandb_board)
             info = {'states':  self.board.board,
                     'reward':  reward,
                     'move_0':  move[0],
@@ -80,8 +84,6 @@ class DiskonnectPlayerEnv(gym.Env):
         self.board.render(mode)
 ###
     def __log__(self, info, commit=False):
-        wandb_board = wandb.Table( data=list(self.board) )
-        wandb.log({'board': wandb_board}, commit=False, step=self.global_step)
         wandb.log(info, commit=commit, step=self.global_step)
         
 
