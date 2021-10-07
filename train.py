@@ -42,7 +42,7 @@ def init_model(env, lr=3e-4, batch_size=32):
                device         = device)
 
 
-def train_level(player_piece, board_len, board, logging, timesteps, level_num=0, state_dict=None):
+def train_level(player_piece, logging, timesteps, board_len, board=None, level_num=0, state_dict=None):
     # build environment 
     env = gym.make("DiskonnectPlayerEnv-v0", player_piece=player_piece, length=board_len, board=board, logging=logging)
     env = DummyVecEnv([lambda: env])
@@ -70,67 +70,111 @@ def train_level(player_piece, board_len, board, logging, timesteps, level_num=0,
 
 
 def main():
+    # train method
+    train_method = 'random' # can be 'fixed' or 'random'
     # using Wandb to visualize results
     logging = True
-    if logging:
-        wandb.init(name         = "multi-level-training-1",
-                   project      = '1D-Diskonnect',
-                   monitor_gym  = True,
-                   reinit       = True)
     ### default env/hyper params
     board_len = 9
     timesteps = 3e4
     level_num = 0
     ###
-    state_dict = train_level(-1, 
-                             board_len,
-                             np.array([0, 1, 0, 1, -1, 1, 0, 1, 0]),
-                             logging,
-                             timesteps,
-                             level_num=level_num
-                             )
+    if train_method == 'fixed':
+        if logging:
+            wandb.init(name         = "multi-level-training-1",
+                       project      = '1D-Diskonnect',
+                       monitor_gym  = True,
+                       reinit       = True)
+        state_dict = train_level(-1, 
+                                 logging,
+                                 timesteps,
+                                 board_len,
+                                 np.array([0, 1, 0, 1, -1, 1, 0, 1, 0]),
+                                 level_num=level_num
+                                 )
+        ###
+        level_num+=1
+        state_dict = train_level(-1, 
+                                 logging,
+                                 timesteps,
+                                 board_len,
+                                 np.array([0, 1, -1, 1, 0, 1, -1, 1, 0]),
+                                 level_num=level_num,
+                                 state_dict=state_dict
+                                 )
+        ###
+        level_num+=1
+        state_dict = train_level(-1, 
+                                 logging,
+                                 timesteps,
+                                 board_len,
+                                 np.array([-1, 1, 0, 1, 0, 1, 0, 1, -1]),
+                                 level_num=level_num,
+                                 state_dict=state_dict
+                                 )
+        ### 
+        level_num+=1
+        state_dict = train_level(-1, 
+                                 logging,
+                                 timesteps,
+                                 board_len,
+                                 np.array([0, 1, -1, 1, -1, 1, -1, 1, 0]),
+                                 level_num=level_num,
+                                 state_dict=state_dict
+                                 )
+        ### 
+        level_num+=1
+        state_dict = train_level(-1, 
+                                 logging,
+                                 timesteps,
+                                 board_len,
+                                 np.array([-1, 1, -1, 1, -1, 1, -1, 1, 0]),
+                                 level_num=level_num,
+                                 state_dict=state_dict
+                                 )
+        ### 
+        level_num+=1
+        state_dict = train_level(-1, 
+                                 logging,
+                                 timesteps,
+                                 board_len,
+                                 np.array([-1, 0, -1, 1, -1, 1, -1, 0, -1]),
+                                 level_num=level_num,
+                                 state_dict=state_dict
+                                 )
+        ### 
+        level_num+=1
+        state_dict = train_level(-1, 
+                                 logging,
+                                 timesteps,
+                                 board_len,
+                                 np.array([0, 0, -1, 1, -1, 1, -1, -1, 0]),
+                                 level_num=level_num,
+                                 state_dict=state_dict
+                                 )
+        ### 
+        level_num+=1
+        state_dict = train_level(-1, 
+                                 logging,
+                                 timesteps,
+                                 board_len,
+                                 np.array([-1, -1, 0, 1, -1, -1, 1, 0, -1]),
+                                 level_num=level_num,
+                                 state_dict=state_dict
+                                 )
     ###
-    level_num+=1
-    state_dict = train_level(-1, 
-                             board_len,
-                             np.array([0, 1, -1, 1, 0, 1, -1, 1, 0]),
-                             logging,
-                             timesteps,
-                             level_num=level_num,
-                             state_dict=state_dict
-                             )
-    ###
-    level_num+=1
-    state_dict = train_level(-1, 
-                             board_len,
-                             np.array([-1, 1, 0, 1, 0, 1, 0, 1, -1]),
-                             logging,
-                             timesteps,
-                             level_num=level_num,
-                             state_dict=state_dict
-                             )
-    ### 
-    level_num+=1
-    state_dict = train_level(-1, 
-                             board_len,
-                             np.array([0, 1, -1, 1, -1, 1, -1, 1, 0]),
-                             logging,
-                             timesteps,
-                             level_num=level_num,
-                             state_dict=state_dict
-                             )
-    ### 
-    level_num+=1
-    state_dict = train_level(-1, 
-                             board_len,
-                             np.array([-1, 1, -1, 1, -1, 1, -1, 1, 0]),
-                             logging,
-                             timesteps,
-                             level_num=level_num,
-                             state_dict=state_dict
-                             )
-    ###
-
+    else:
+        timesteps *= 1e3
+        if logging:
+            wandb.init(name         = "random-training-1",
+                       project      = '1D-Diskonnect',
+                       monitor_gym  = True,
+                       reinit       = True)
+        state_dict = train_level(-1,
+                                 logging, 
+                                 timesteps,
+                                 board_len)
+    ###    
     print("=== Saving model =====")
     
     torch.save( state_dict, "diskonnect_model-1" )

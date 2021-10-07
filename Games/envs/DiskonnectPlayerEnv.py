@@ -10,11 +10,10 @@ from gym import spaces
 import wandb
 
 
-###########
+#############################
 
 
 class DiskonnectPlayerEnv(gym.Env):
-    
     def __init__(self, player_piece, length=None, board=None, logging=False):
         if length == None:
             try:
@@ -39,8 +38,7 @@ class DiskonnectPlayerEnv(gym.Env):
         self.log=logging
 
         self.reset()
-        
-        
+###
     def step(self, action):
         piece_to_move = action[0]
         direction     = action[1]
@@ -69,8 +67,7 @@ class DiskonnectPlayerEnv(gym.Env):
             self.__log__(info, commit=True)
         
         return obs, reward, done, {}
-    
-
+###
     def reset(self):
         self.curr_step = 0
         if self.orig_board is not None:
@@ -78,21 +75,20 @@ class DiskonnectPlayerEnv(gym.Env):
         self.board.reset()
         self.episode_reward = 0
         return self.board.board
-    
-
+###
     def render(self, mode=None):
         self.board.render(mode)
-        
-
+###
     def __log__(self, info, commit=False):
+        wandb_board = wandb.Table( data=list(self.board) )
+        wandb.log({'board': wandb_board}, commit=False, step=self.global_step)
         wandb.log(info, commit=commit, step=self.global_step)
         
 
-###########
+#############################
 
 
 class Diskonnect1D():
-    
     def __init__(self, length=None, board=None):
         self.fixed_board = False
         if length != None:
@@ -102,14 +98,14 @@ class Diskonnect1D():
             self.len = len(board)
             self.fixed_board = True
         self.reset()
-
+###
     def reset(self):
         self.vis_board = None
         self.legal_moves = {-1:[],1:[]}
         if not self.fixed_board:
             self._generate_board_()
         self._gen_legal_moves_()
-    
+###
     def _generate_board_(self):
         while True:
             # fix the number of players to be in [2?, length-10?]
@@ -133,8 +129,7 @@ class Diskonnect1D():
             self._gen_legal_moves_()
             if not self._is_done_():
                 break
-
-            
+###
     def _update_board_(self, player, move):
         is_legal_move = self._check_legal_move_(player, move)
         if is_legal_move == 1:
@@ -142,15 +137,14 @@ class Diskonnect1D():
             self.board[int(sum(move)/2)] = 0
             self.board[move[1]]          = player
             self._gen_legal_moves_()
-
         return is_legal_move
-                    
+###
     def _check_legal_move_(self, player, move):
         if move in self.legal_moves[player]:
             return 1
         else:
             return 0
-    
+###
     def _gen_legal_moves_(self):
         self.legal_moves = {-1:[],1:[]}
         for idx, ele in enumerate(self.board):
@@ -171,13 +165,13 @@ class Diskonnect1D():
             if (right_land == 0) and (right_jump_over != 0) and (ele != right_jump_over):
                 self.legal_moves[ele].append((idx, idx+2))
             if (left_land == 0) and (left_jump_over != 0) and (ele != left_jump_over):
-                self.legal_moves[ele].append((idx, idx-2))
-                
+                self.legal_moves[ele].append((idx, idx-2))             
+###
     def _is_done_(self):
         if self.legal_moves == {-1:[],1:[]}:
             return True
         return False
-
+###
     def render(self, mode='human'):
         if mode == 'human':
             if self.vis_board == None:
