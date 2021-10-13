@@ -15,29 +15,20 @@ import wandb
 
 
 class DiskonnectPlayerEnv(gym.Env):
-    def __init__(self, player_piece, length=None, board=None, logging=False):
-        if length == None:
-            try:
-                length = len(board)
-            except TypeError:
-                raise("One of 'length' or 'board' must be defined, try again")
+    metadata = {'render.modes': ['human']}
+    reward_range = (-float(1.0), float(1.0))
 
+    def __init__(self, player_piece, length, boards=[], logging=False):
         self.action_space = spaces.MultiDiscrete( [ length, 2 ] ) # player piece to move, direction
         self.observation_space = spaces.Box( -np.ones(length), np.ones(length), dtype=np.float32 )
-        
+
         self.player = player_piece
         self.len = length
+        self.boards = boards
+        self.board = Diskonnect1D(length=length)
         
-        self.global_step = 0
-
-        self.orig_board = None
-        if type(board) == type(None):
-            self.board = Diskonnect1D(length=self.len)
-        else:
-            self.orig_board = deepcopy(board)
-
+        self.global_step=0
         self.log=logging
-
         self.reset()
 ###
     def step(self, action):
@@ -74,8 +65,12 @@ class DiskonnectPlayerEnv(gym.Env):
 ###
     def reset(self):
         self.curr_step = 0
-        if self.orig_board is not None:
-            self.board = Diskonnect1D(board=deepcopy(self.orig_board))
+        if len(self.boards) == 0:
+            self.board._generate_board_()
+        elif len(self.boards) == 1:
+            self.board.board = deepcopy( self.boards[0] )
+        else:
+            self.board.board = deepcopy( rand.choice(self.boards) ) 
         self.board.reset()
         self.episode_reward = 0
         return self.board.board
@@ -92,20 +87,17 @@ class DiskonnectPlayerEnv(gym.Env):
 
 class Diskonnect1D():
     def __init__(self, length=None, board=None):
-        self.fixed_board = False
         if length != None:
             self.len = length
+            self._generate_board_()
         if type(board) != type(None):
             self.board = board
             self.len = len(board)
-            self.fixed_board = True
         self.reset()
 ###
     def reset(self):
         self.vis_board = None
         self.legal_moves = {-1:[],1:[]}
-        if not self.fixed_board:
-            self._generate_board_()
         self._gen_legal_moves_()
 ###
     def _generate_board_(self):
