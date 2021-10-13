@@ -42,9 +42,9 @@ def init_model(env, lr=3e-4, batch_size=32):
                device         = device)
 
 
-def train_level(player_piece, logging, timesteps, board_len, board=None, level_num=0, state_dict=None):
+def train_level(player_piece, logging, timesteps, board_len, boards=[], level_num=0, state_dict=None):
     # build environment 
-    env = gym.make("DiskonnectPlayerEnv-v0", player_piece=player_piece, length=board_len, board=board, logging=logging)
+    env = gym.make("DiskonnectPlayerEnv-v0", player_piece=player_piece, length=board_len, boards=boards, logging=logging)
     env = DummyVecEnv([lambda: env])
     print("=== Training model {} =====".format(level_num))
     # building policy model
@@ -71,7 +71,7 @@ def train_level(player_piece, logging, timesteps, board_len, board=None, level_n
 
 def main():
     # train method
-    train_method = 'random' # can be 'fixed' or 'random'
+    train_method = 'fixed' # can be 'fixed' or 'random'
     # using Wandb to visualize results
     logging = True
     ### default env/hyper params
@@ -85,30 +85,33 @@ def main():
                        project      = '1D-Diskonnect',
                        monitor_gym  = True,
                        reinit       = True)
+        boards = [ np.array([0, 1, 0, 1, -1, 1, 0, 1, 0]) ]
         state_dict = train_level(-1, 
                                  logging,
                                  timesteps,
                                  board_len,
-                                 np.array([0, 1, 0, 1, -1, 1, 0, 1, 0]),
+                                 boards,
                                  level_num=level_num
                                  )
-        ###
         level_num+=1
+        ###
+        boards.append( np.array([0, 1, -1, 1, 0, 1, -1, 1, 0]) )
         state_dict = train_level(-1, 
                                  logging,
                                  timesteps,
                                  board_len,
-                                 np.array([0, 1, -1, 1, 0, 1, -1, 1, 0]),
+                                 boards,
                                  level_num=level_num,
                                  state_dict=state_dict
                                  )
-        ###
         level_num+=1
+        ###
+        boards.append( np.array([-1, 1, 0, 1, 0, 1, 0, 1, -1]) )
         state_dict = train_level(-1, 
                                  logging,
                                  timesteps,
                                  board_len,
-                                 np.array([-1, 1, 0, 1, 0, 1, 0, 1, -1]),
+                                 boards,
                                  level_num=level_num,
                                  state_dict=state_dict
                                  )
