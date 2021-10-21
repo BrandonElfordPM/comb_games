@@ -18,9 +18,11 @@ from stable_baselines3.common.vec_env import DummyVecEnv, VecCheckNan
 from stable_baselines3.common.env_util import make_vec_env
 
 SEED=20200530
+PREV_TIMESTEPS=0
 
-
-def init_model(env, lr=3e-4, batch_size=32):
+def init_model(env, policy_kwargs={}):
+    lr         = policy_kwargs['lr']         if 'lr'         in policy_kwargs else 3e-4
+    batch_size = policy_kwargs['batch_size'] if 'batch_size' in policy_kwargs else 32
     # default device
     device = "cpu"
     # default policy
@@ -42,18 +44,17 @@ def init_model(env, lr=3e-4, batch_size=32):
                device         = device)
 
 
-def train_level(player_piece, logging, timesteps, board_len, boards=[], level_num=0, state_dict=None):
+def train_level(player_piece, logging, timesteps, board_len, boards=[], level_num=0, state_dict=None, policy_kwargs={}):
     # build environment 
     env = gym.make("DiskonnectPlayerEnv-v0", player_piece=player_piece, length=board_len, boards=boards, logging=logging)
     env = DummyVecEnv([lambda: env])
     print("=== Training model {} =====".format(level_num))
+    wandb.log({"iteration"}, commit=False)
     # building policy model
-    model = init_model(env)
-    # if continuing training, need to configure wandb to continue logging
-    if level_num > 0:
-        model.env.envs[0].global_step += int( ( timesteps + 720 ) * level_num)  # not sure why I need to add 720
-    # if continuing, load in state dict
+    model = init_model(env, policy_kwargs)
+    # if continuing, load in state dict and timesteps
     if state_dict is not None:
+        model.env.envs[0].global_step =         state_dict['model_timesteps']
         model.policy.load_state_dict(           state_dict['model_state_dict']     )
         model.policy.optimizer.load_state_dict( state_dict['optimizer_state_dict'] )
     # train model
@@ -62,6 +63,7 @@ def train_level(player_piece, logging, timesteps, board_len, boards=[], level_nu
                 reset_num_timesteps = False)
     # save state dict for model and optimizer
     state_dict = {
+                    'model_timesteps':       model.env.envs[0].global_step,
                     'model_state_dict':      model.policy.state_dict(),
                     'optimizer_state_dict':  model.policy.optimizer.state_dict(),
                    }
@@ -76,8 +78,12 @@ def main():
     logging = True
     ### default env/hyper params
     board_len = 9
-    timesteps = 3e4
+    timesteps = 2e4
+    prev_timesteps = 0
     level_num = 0
+    hyper_params = {'lr':         3e-4,
+                    'batch_size': 32
+                    }
     ###
     if train_method == 'fixed':
         if logging:
@@ -88,86 +94,105 @@ def main():
         boards = [ np.array([0, 1, 0, 1, -1, 1, 0, 1, 0]) ]
         state_dict = train_level(-1, 
                                  logging,
-                                 timesteps,
+                                 timesteps*len(boards)*2,
                                  board_len,
                                  boards,
                                  level_num=level_num
                                  )
         level_num+=1
         ###
+        hyper_params['lr'] = 1e-4
         boards.append( np.array([0, 1, -1, 1, 0, 1, -1, 1, 0]) )
         state_dict = train_level(-1, 
                                  logging,
-                                 timesteps,
+                                 timesteps*len(boards)*2,
                                  board_len,
                                  boards,
                                  level_num=level_num,
-                                 state_dict=state_dict
+                                 state_dict=state_dict,
+                                 policy_kwargs=hyper_params
                                  )
         level_num+=1
         ###
+        hyper_params['lr'] = 7.5e-5
         boards.append( np.array([-1, 1, 0, 1, 0, 1, 0, 1, -1]) )
         state_dict = train_level(-1, 
                                  logging,
-                                 timesteps,
+                                 timesteps*len(boards)*2,
                                  board_len,
                                  boards,
                                  level_num=level_num,
-                                 state_dict=state_dict
-                                 )
-        ### 
+                                 state_dict=state_dict,
+                                 policy_kwargs=hyper_params
+                                 ) 
         level_num+=1
+        ###
+        hyper_params['lr'] = 5e-5
+        boards.append( np.array([0, 1, -1, 1, -1, 1, -1, 1, 0]) )
         state_dict = train_level(-1, 
                                  logging,
-                                 timesteps,
+                                 timesteps*len(boards)*2,
                                  board_len,
-                                 np.array([0, 1, -1, 1, -1, 1, -1, 1, 0]),
+                                 boards,
                                  level_num=level_num,
-                                 state_dict=state_dict
-                                 )
-        ### 
+                                 state_dict=state_dict,
+                                 policy_kwargs=hyper_params
+                                 ) 
         level_num+=1
+        ###
+        hyper_params['lr'] = 2.5e-5
+        boards.append( np.array([-1, 1, -1, 1, -1, 1, -1, 1, 0]) )
         state_dict = train_level(-1, 
                                  logging,
-                                 timesteps,
+                                 timesteps*len(boards)*2,
                                  board_len,
-                                 np.array([-1, 1, -1, 1, -1, 1, -1, 1, 0]),
+                                 boards,
                                  level_num=level_num,
-                                 state_dict=state_dict
+                                 state_dict=state_dict,
+                                 policy_kwargs=hyper_params
                                  )
-        ### 
         level_num+=1
+        ###
+        hyper_params['lr'] = 1e-5
+        boards.append( np.array([-1, 0, -1, 1, -1, 1, -1, 0, -1]) )
         state_dict = train_level(-1, 
                                  logging,
-                                 timesteps,
+                                 timesteps*len(boards)*2,
                                  board_len,
-                                 np.array([-1, 0, -1, 1, -1, 1, -1, 0, -1]),
+                                 boards,
                                  level_num=level_num,
-                                 state_dict=state_dict
+                                 state_dict=state_dict,
+                                 policy_kwargs=hyper_params
                                  )
-        ### 
         level_num+=1
+        ###
+        hyper_params['lr'] = 7.5e-6
+        boards.append( np.array([0, 0, -1, 1, -1, 1, -1, -1, 0]) )
         state_dict = train_level(-1, 
                                  logging,
-                                 timesteps,
+                                 timesteps*len(boards)*2,
                                  board_len,
-                                 np.array([0, 0, -1, 1, -1, 1, -1, -1, 0]),
+                                 boards,
                                  level_num=level_num,
-                                 state_dict=state_dict
+                                 state_dict=state_dict,
+                                 policy_kwargs=hyper_params
                                  )
-        ### 
         level_num+=1
+        ###
+        hyper_params['lr'] = 5e-6
+        boards.append( np.array([-1, -1, 0, 1, -1, -1, 1, 0, -1]) )
         state_dict = train_level(-1, 
                                  logging,
-                                 timesteps,
+                                 timesteps*len(boards)*2,
                                  board_len,
-                                 np.array([-1, -1, 0, 1, -1, -1, 1, 0, -1]),
+                                 boards,
                                  level_num=level_num,
-                                 state_dict=state_dict
+                                 state_dict=state_dict,
+                                 policy_kwargs=hyper_params
                                  )
     ###
     else:
-        timesteps *= 1e3
+        timesteps *= 1e2
         if logging:
             wandb.init(name         = "random-training-1",
                        project      = '1D-Diskonnect',
@@ -179,8 +204,13 @@ def main():
                                  board_len)
     ###    
     print("=== Saving model =====")
-    
-    torch.save( state_dict, "diskonnect_model-1" )
+
+    _, _, files = next(os.walk("./Saved_models"))
+    file_count = len(files)
+    file_name = "Saved_models/diskonnect-model-"+str(file_count)
+    print("Saving file to {} ...".format(file_name))
+    torch.save( state_dict, file_name)
+    print("DONE!")
 
 if __name__=="__main__":
     main()

@@ -28,6 +28,8 @@ class DiskonnectPlayerEnv(gym.Env):
         self.board = Diskonnect1D(length=length)
         
         self.global_step=0
+        self.curr_step=0
+        self.episode_len=length*5
         self.log=logging
         self.reset()
 ###
@@ -42,7 +44,12 @@ class DiskonnectPlayerEnv(gym.Env):
         self.episode_reward += reward
         
         done = self.board._is_done_()
-        done = ( self.board.legal_moves[self.player] == [] )
+        if self.board.legal_moves[self.player] == []:
+            done = True
+            reward += 1.0
+        if self.curr_step > self.episode_len:
+            done = True
+            reward -= 1.0
         obs = self.board.board
 
         self.curr_step += 1
