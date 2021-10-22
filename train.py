@@ -49,7 +49,7 @@ def train_level(player_piece, logging, timesteps, board_len, boards=[], level_nu
     env = gym.make("DiskonnectPlayerEnv-v0", player_piece=player_piece, length=board_len, boards=boards, logging=logging)
     env = DummyVecEnv([lambda: env])
     print("=== Training model {} =====".format(level_num))
-    wandb.log({"iteration"}, commit=False)
+    wandb.log({"iteration": level_num}, commit=False)
     # building policy model
     model = init_model(env, policy_kwargs)
     # if continuing, load in state dict and timesteps
@@ -114,7 +114,6 @@ def main():
                                  )
         level_num+=1
         ###
-        hyper_params['lr'] = 7.5e-5
         boards.append( np.array([-1, 1, 0, 1, 0, 1, 0, 1, -1]) )
         state_dict = train_level(-1, 
                                  logging,
@@ -140,7 +139,6 @@ def main():
                                  ) 
         level_num+=1
         ###
-        hyper_params['lr'] = 2.5e-5
         boards.append( np.array([-1, 1, -1, 1, -1, 1, -1, 1, 0]) )
         state_dict = train_level(-1, 
                                  logging,
@@ -153,7 +151,6 @@ def main():
                                  )
         level_num+=1
         ###
-        hyper_params['lr'] = 1e-5
         boards.append( np.array([-1, 0, -1, 1, -1, 1, -1, 0, -1]) )
         state_dict = train_level(-1, 
                                  logging,
@@ -166,7 +163,6 @@ def main():
                                  )
         level_num+=1
         ###
-        hyper_params['lr'] = 7.5e-6
         boards.append( np.array([0, 0, -1, 1, -1, 1, -1, -1, 0]) )
         state_dict = train_level(-1, 
                                  logging,
@@ -179,8 +175,7 @@ def main():
                                  )
         level_num+=1
         ###
-        hyper_params['lr'] = 5e-6
-        boards.append( np.array([-1, -1, 0, 1, -1, -1, 1, 0, -1]) )
+        boards.append( np.array([-1, -1, 0, 1, -1, -1, 0, 1, -1]) )
         state_dict = train_level(-1, 
                                  logging,
                                  timesteps*len(boards)*2,
