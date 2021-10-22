@@ -202,7 +202,7 @@ def main():
 
     _, _, files = next(os.walk("./Saved_models"))
     file_count = len(files)
-    file_name = "Saved_models/diskonnect-model-"+str(file_count)
+    file_name = "Saved_models/"+train_method+"-diskonnect-model-"+str(file_count)
     print("Saving file to {} ...".format(file_name))
     torch.save( state_dict, file_name)
     print("DONE!")
